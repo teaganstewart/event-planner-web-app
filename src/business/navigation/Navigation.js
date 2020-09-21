@@ -1,93 +1,65 @@
-import {createBottomTabNavigator} from 'react-navigation'
+import React from 'react';
 
-const BottomTab = createBottomTabNavigator();
+import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function BottomTabNavigator(props) {
+// Imports the required external pages 
+import AccountScreen from '../../presentation/AccountScreen'
+import CalendarScreen from '../../presentation/CalendarScreen'
+import HomeScreen from '../../presentation/HomeScreen'
+import MapScreen from '../../presentation/MapScreen'
 
-  return (
-    <BottomTab.Navigator screenOptions={{ headerShown: false }}
-      
-      tabBarOptions={{ 
-        
-        activeTintColor: "#2bc475",
-        labelStyle: {
-          marginTop: -2
-        }
-      }
-    }>
-    
-      <BottomTab.Screen
-        name="Home"
-        component={HomeNavigator}
-        options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-home" color={color} />,
-        }}
-      />
-      <BottomTab.Screen
-        name="Calendar"
-        component={CalendarNavigator}
-        options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-calendar" color={color} />,
-        }}
-      />
-      <BottomTab.Screen
-        name="Account"
-        component={AccountNavigator}
-        options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-people" color={color}/>,
-        }}
-      />
-    </BottomTab.Navigator>
-  );
-}
+/* Provides the main bottom tab navigation through the app. Is used on the home page and creates
+navigation to the account, map and calendar pages. */
+export const TabNavigator = createBottomTabNavigator({
 
-// You can explore the built-in icon families and icons on the web at:
-// https://icons.expo.fyi/
-function TabBarIcon(props) {
-  return <Ionicons size={30} style={{ marginBottom: -3 }} {...props} />;
-}
-
-// Each tab has its own navigation stack, you can read more about this pattern here:
-// https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
-const TabOneStack = createStackNavigator();
-
-function HomeNavigator() {
-  return (
-    <TabOneStack.Navigator screenOptions={{ headerShown: false }}>
-      <TabOneStack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerTitle: 'Home' }}
-      />
-    </TabOneStack.Navigator>
-  );
-}
-
-const TabTwoStack = createStackNavigator();
-
-function CalendarNavigator() {
-  return (
-    <TabTwoStack.Navigator screenOptions={{ headerShown: false}} >
-      <TabTwoStack.Screen
-      
-        name="Calendar"
-        component={CalendarScreen}
-        options={{ headerTitle: 'Calendar' }}
-      />
-    </TabTwoStack.Navigator>
-  );
-}
-
-const TabThreeStack = createStackNavigator();
-function AccountNavigator() {
-  return (
-    <TabThreeStack.Navigator screenOptions={{ headerShown: false }}>
-      <TabThreeStack.Screen
-        name="Account"
-        component={AccountScreen}
-        options={{ headerTitle: 'Account' }}
-
-      />
-    </TabThreeStack.Navigator>
-  );
-}
+  // Naivgation to the main home screen
+  Home: {
+    screen: HomeScreen,
+    navigationOptions: () => ({
+      activeTintColor: '#000',
+      header: null,
+      tabBarVisible: true,
+      tabBarIcon: ({ focused, tintColor }) => {
+        const iconName = `ios-home`;
+        return <Ionicons name={iconName} size={25} color={focused ? "#2bc475" : "000000"} />;
+      },
+    })
+  },
+  // Navigation to the calendar screen that provides the monthly view
+  Calendar: {
+    screen: CalendarScreen,
+    navigationOptions: () => ({
+      header: null,
+      tabBarVisible: false,
+      tabBarIcon: ({ focused, tintColor }) => {
+        const iconName = `ios-calendar`;
+        return <Ionicons name={iconName} size={25} color={focused ? "#2bc475" : "000000"} />;
+      },
+    })
+  },
+  // Navigation to the map screen that shows the location of all events
+  Map: {
+    screen: MapScreen,
+    navigationOptions: () => ({
+      header: null,
+      tabBarVisible: false,
+      tabBarIcon: ({ focused, tintColor }) => {
+        const iconName = `ios-map`;
+        return <Ionicons name={iconName} size={25} color={focused ? "#2bc475" : "000000"} />;
+      },
+    })
+  },
+  // Navigation to the account screen, where you can logout
+  Account: {
+    screen: AccountScreen,
+    navigationOptions: () => ({
+      header: null,
+      tabBarVisible: false,
+      tabBarIcon: ({ focused, tintColor }) => {
+        const iconName = `ios-people`;
+        return <Ionicons name={iconName} size={25} color={focused ? "#2bc475" : "000000"} />;
+      },
+    })
+  },
+});

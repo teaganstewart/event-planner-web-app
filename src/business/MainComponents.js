@@ -17,12 +17,14 @@ export const CustomTextInput = (props) => {
     );
 }
 
+// Creates a simple customisable app button. Mainly used on the login screen.
 export const AppButton = (props) => (
     <TouchableOpacity onPress={props.onPress} style={props.style}>
         <Text style={loginStyles.button}> {props.title} </Text>
     </TouchableOpacity>
 );
 
+// Creates the text input for the modal screens.
 export const ModalTextInput = (props) => {
     return (
         <TextInput
@@ -35,6 +37,7 @@ export const ModalTextInput = (props) => {
     );
 }
 
+// Creates unique buttons for each of the modal screens.
 export const ModalButton = (props) => (
     <TouchableOpacity onPress={props.onPress} disabled={props.disabled}>
         <Text style={calendarStyles.button}> {props.title} </Text>

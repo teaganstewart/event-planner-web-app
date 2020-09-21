@@ -34,6 +34,7 @@ export async function authenticate(email, password) {
     }
 }
 
+// Sets the users details in firestore, so they can be accessed later.
 export async function setUserDetails(res, email, name) {
     res.then((response) => {
         if (response != null && response.user != null) {
@@ -56,28 +57,7 @@ export async function setUserDetails(res, email, name) {
     })
 }
 
-export async function getUserDetails(res) {
-    res.then((response) => {
-        const uid = response.user.uid
-        const usersRef = firebase.firestore().collection('users')
-        usersRef
-            .doc(uid)
-            .get()
-            .then(firestoreDocument => {
-                if (!firestoreDocument.exists) {
-                    alert("User does not exist anymore.")
-                    return;
-                }
-                const user = firestoreDocument.data()
-                return { user }
-            })
-            .catch(error => {
-                alert(error)
-            });
-    })
-}
-
-
+// Adds a users events to storage so they can be accessed later.
 export async function addEventToStorage(eid, selectedDay, eventName, loc, sHours, sMinutes, eHours, eMinutes, lat, long) {
     firebase.auth().onAuthStateChanged(function (user) {
         if (user) {
@@ -102,6 +82,7 @@ export async function addEventToStorage(eid, selectedDay, eventName, loc, sHours
     });
 }
 
+// Deletes a users event from storage using its unique id.
 export async function deleteEventFromStorage(id) {
     firebase.auth().onAuthStateChanged(function (user) {
         if (user) {

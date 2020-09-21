@@ -1,42 +1,55 @@
+/* Imports react-native components*/
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import Modal from 'modal-react-native-web'
-import { ModalButton, ModalTextInput, AppButton } from './MainComponents'
+import { FlatList, TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
 import moment from 'moment';
 
-import { Ionicons } from '@expo/vector-icons';
-import { InteractiveMap, Marker, NavigationControl } from 'react-map-gl';
-import { EventObject } from '../data/EventObject'
+/* Imports external components */
 import TimePicker from 'react-native-simple-time-picker';
-
+import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
+import Modal from 'modal-react-native-web'
 import { Card } from 'react-native-paper'
-import { FlatList, TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
-import { addEventToStorage, deleteEventFromStorage } from '../data/FirebaseAccess';
+import { InteractiveMap, Marker, NavigationControl } from 'react-map-gl';
 
+/* Imports other components I have written */
+import { ModalButton, ModalTextInput } from './MainComponents'
+import { EventObject } from '../data/EventObject'
+
+/* Imports for firebase access/ setup */
 import * as firebase from 'firebase'
 import { subscribeToAuthChanges } from '../business/FirebaseSetup'
+import { addEventToStorage, deleteEventFromStorage } from '../data/FirebaseAccess';
 
 import { calendarStyles, homeStyles } from '../presentation/style'
+import { datePickerDefaultProps } from '@material-ui/pickers/constants/prop-types';
 
-
+/* Creates the colours for the dots that represent events on the calendar*/
 const purple = { key: 'purple', color: '#ab54a0', };
 const blue = { key: 'blue', color: '#1dbdcc', };
 const red = { key: 'red', color: '#e01b4c' };
 
+/* Sets the date format for the calendar*/
 const _format = 'YYYY-MM-DD';
 const _today = moment(new Date().dateString).format(_format);
 
+/* Creates the calendar component on the Calendar Screen. Also provides all the modal popups for 
+deleting/ editing of events. */
 export default class CalendarComponent extends React.Component {
 
   initialState = {
     [_today]: { disabled: false },
   };
 
+  /*The initial state when the page loads, sets all default variables for the events, 
+  maps and modal visibility */
   state = {
-    isMap: false,
-    isEditing: false,
+    isMap: false, //display of map
+    isEditing: false, // whether user is editing an event or not
     loading: false,
+    isOpen: false, //display of main modal
+    isAddOpen: false, //display of add event modal
+    isEditOpen: false, //display of edit event modal
     eventName: '',
     location: '',
     startHours: '0',
@@ -44,9 +57,6 @@ export default class CalendarComponent extends React.Component {
     endHours: '0',
     endMinutes: '0',
     _markedDates: this.getMarkedDates(),
-    isOpen: false,
-    isAddOpen: false,
-    isEditOpen: false,
     selectedDay: '',
     selectedEvent: '',
     events: this.props.events,
@@ -61,62 +71,77 @@ export default class CalendarComponent extends React.Component {
     longitude: ''
   };
 
-
+  /* Methods that update the page when imformation from firestore is updated, or they are called */
   componentDidMount = () => {
     subscribeToAuthChanges(this.onAuthStateChanged)
   }
 
+  /* Uses the current user to either return to AuthScreen, or loads current users events. */
   onAuthStateChanged = (user) => {
     if (user === null) {
       this.props.navigation.navigate('Auth');
     }
     else {
+      // this method is only called when a selected event is to be deleted and on initialisation
       this.state.loading = true;
+      // catches initialisation
       if (this.state.selectedEvent != '') {
+        // deletes selected event from storage
         deleteEventFromStorage(this.state.selectedEvent.getId())
+
+        // references the current users collection of events.
         const eventsRef = firebase.firestore().collection("users").doc(user.uid).collection("events")
+
         while (eventsRef.doc(this.state.selectedEvent.getId()) === undefined) {
           // makes sure that the event is deleted before refreshing
         }
       }
 
       this.state.loading = false;
+
+      // resets the marked dates so the calendar is displayed correctly
       this.setState({ selectedDay: '', selectedEvent: '', _markedDates: this.getMarkedDates() })
     }
   }
 
-
+  /* Method that gets called on initalisation and on deletion/ creation of events. Marks the calendar
+  with dots for events and highlights dates with at least one event.*/
   getMarkedDates() {
     let markedEvents = {};
     let events = this.props.events;
-    let uniqueDates = []; //remove duplicate event dates
+    let dates = [];
     let selected = true;
 
+    // Gets the dates from the event map
     for (const [key, value] of events.entries()) {
-      uniqueDates.push(key)
+      dates.push(key)
     }
 
-    uniqueDates.forEach(function (date) {
+    // Uses these events to mark the calendar
+    dates.forEach(function (date) {
       let dots = [];
       let markedData = {};
 
-      //marks the selected date
+      // Gets the correct amount of dots for each date. Max is 3.
       if (events.get(date).length >= 1) dots.push(purple);
       if (events.get(date).length >= 2) dots.push(blue);
       if (events.get(date).length >= 3) dots.push(red);
 
       if (dots.length == 0) selected = false;
 
-      markedData['dots'] = dots; //set the array of dots
-      markedData['selected'] = selected
-      markedEvents[date] = markedData; //add markers to marked dates
+      markedData['dots'] = dots; // Sets the array of dots.
+      markedData['selected'] = selected // Sets whether date is highlighted or not
+      markedEvents[date] = markedData; // Adds markers to marked dates
     });
 
     return markedEvents;
 
   }
 
+  /* Method that triggers when a date is pressed on the calendar. Sets and resets the relevant 
+  selected objects. */
   onDaySelect = day => {
+    // Makes sure pressed date is the chosen date.
     const _selectedDay = moment(day.dateString).format(_format);
 
     this.setState({
@@ -129,9 +154,13 @@ export default class CalendarComponent extends React.Component {
 
   };
 
+  /* A method that checks the entered variables for the new/ edited event are valid. There are
+  weird checks as javascript was saying that numbers seperation by a 10 were bigger when they were smaller.
+  e.g 12 > 9 was false when it should have been true. */
   variableCheck = () => {
     const { eventName, startHours, startMinutes, endHours, endMinutes } = this.state;
 
+    // Due to the external component not having an option to change the numbers.
     if (endHours === 24 || startHours === 24) {
       alert("Events can only stay on the current date! Sorry!")
     }
@@ -159,24 +188,25 @@ export default class CalendarComponent extends React.Component {
     return true;
   }
 
-  // Creates a random id
+  // Creates a random id for the user's events. Found online.
   randomId = () => {
     return '_' + Math.random().toString(36).substr(2, 9);
   };
 
+  /* The method that is called when the user adds a new event.*/
   saveDay = () => {
     let dots = [];
     let selected = true;
 
     const { _markedDates, latitude, longitude, selectedDay, events, eventName, location, startHours, startMinutes, endHours, endMinutes } = this.state;
 
+    // Makes sure that the user has chosen a location on the map before creating the event.
     if (latitude === '' || longitude === '') {
       alert("You have to choose a location!")
       return
     }
 
     let id = this.randomId();
-
     let e = new EventObject(
       id,
       eventName,
@@ -190,8 +220,9 @@ export default class CalendarComponent extends React.Component {
       longitude
     );
 
-    // Adds the events to a map 
+    // Adds the event to the event map
     let list = events;
+
     if (list.get(selectedDay) === undefined) {
       let newList = []
       newList.push(e)
@@ -205,28 +236,30 @@ export default class CalendarComponent extends React.Component {
 
     this.setState({ events: list })
 
+    // Adds the event to firebase storage.
     addEventToStorage(id, selectedDay, eventName, location, startHours, startMinutes, endHours, endMinutes, latitude, longitude)
 
     // adds dots to the calendar to represent the number of events (3 or more is just 3 dots)
-    if (events.get(date).length >= 1) dots.push(purple);
-    if (events.get(date).length >= 2) dots.push(blue);
-    if (events.get(date).length >= 3) dots.push(red);
-
+    if (events.get(selectedDay).length >= 1) dots.push(purple);
+    if (events.get(selectedDay).length >= 2) dots.push(blue);
+    if (events.get(selectedDay).length >= 3) dots.push(red);
 
     if (events.length == 0) selected = false;
     else selected = true;
 
+    // updates the calendar ui, to show the new event.
     const clone = { ..._markedDates };
     clone[selectedDay] = { dots, selected };
 
-    this.setState({ _markedDates: clone, eventName: '', location: '', isMap: false });
-
+    // closes the map view and resets the variables.
+    this.setState({ _markedDates: clone, eventName: '', location: '', latitude: '', longitude: '', isMap: false });
   };
 
+  /* A method that first checks the users input for the events variables are correct and non-empty, then
+  if they are moves to the choose location view */
   chooseLocation = () => {
 
     let res = this.variableCheck()
-
     if (res === false) {
       return
     }
@@ -234,23 +267,30 @@ export default class CalendarComponent extends React.Component {
     this.setState({ isAddOpen: false, isMap: true })
   }
 
+  /* Sets up the add event page for editing. First sets all the variables it can to the selected event 
+  to edits variables, then moves to the edit event page.*/
   setupEdit = () => {
     let currEvent = this.state.selectedEvent;
+
+    // keeping selected event to edits variables
     this.setState({
       eventName: currEvent.getName(), location: currEvent.getLocation()
     })
+
     this.setState({ isEditing: true, isAddOpen: true, isEditOpen: false })
   }
 
+  /* Checks users input once editing event, then sets up for editing of location.*/
   editLocation = () => {
 
     let res = this.variableCheck()
-
     if (res === false) {
       return
     }
 
     const { selectedEvent } = this.state
+
+    // Gets the selected events coordinates so it can be displayed on the map.
     let lat = selectedEvent.getLatitude()
     let long = selectedEvent.getLongitude()
 
@@ -258,11 +298,11 @@ export default class CalendarComponent extends React.Component {
     this.setState({ isAddOpen: true, isMap: true })
   }
 
+  /* Called once user changes the edited events location.*/
   editEvent = () => {
-
-
     const { selectedEvent, selectedDay, events, eventName, location, startHours, startMinutes, endHours, endMinutes, latitude, longitude } = this.state;
 
+    // Makes sure the user chose a location.
     if (latitude === '' || longitude === '') {
       alert("You have to choose a location!")
       return
@@ -283,32 +323,42 @@ export default class CalendarComponent extends React.Component {
       longitude
     );
 
+    // Removes the selected event and replaces it with the updated event.
     let eventList = events.get(date)
     eventList.pop(selectedEvent);
     eventList.push(e);
     events.set(date, eventList)
 
+    // Adds event to storage, it has the id so will overwrite old event.
     addEventToStorage(selectedEvent.getId(), selectedDay, eventName, location, startHours, startMinutes, endHours, endMinutes, latitude, longitude)
+    // Closes all modals and shows the calendar.
     this.setState({ isEditing: false, isMap: false, isAddOpen: false, isEditOpen: false })
   }
 
+  /* A method that handles the deletion of an event.*/
   deleteEvent = () => {
     const { selectedEvent, events } = this.state;
     let date = selectedEvent.getDate()
 
+    // Removes the event from the event map
     let eventList = events.get(date)
     eventList.pop(selectedEvent);
     events.set(date, eventList)
 
     this.setState({ isEditOpen: false })
+
+    // Updates the calendar screen with the new event map.
     this.componentDidMount()
   }
 
+  /* A method that is called when a card in the list of events is picked. This event can then be deleted
+  or modified */
   onCardPress = (item) => {
     this.setState({ selectedEvent: item })
   }
 
   render() {
+    /* Button to add an event. */
     const AddButton = () => (
       <ModalButton
         title="Add Event"
@@ -317,6 +367,7 @@ export default class CalendarComponent extends React.Component {
       />
     );
 
+    /* When adding an event, allows the user to go to the choose location screen. */
     const LocationButton = () => (
       <ModalButton
         title="Go to Choose Map Location"
@@ -325,6 +376,7 @@ export default class CalendarComponent extends React.Component {
       />
     );
 
+    /* Closes the modal whether the user is editing or creating an event. */
     const CloseButton = () => (
       <ModalButton
         title="Close"
@@ -333,6 +385,7 @@ export default class CalendarComponent extends React.Component {
       />
     );
 
+    /* Alows the user to start editing the selected event, navigates to the edit event page. */
     const EditButton = () => {
       return (
         <View>
@@ -349,6 +402,7 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Allows user to pick a new location for the selected event. */
     const EditLocationButton = () => {
       return (
 
@@ -361,7 +415,7 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
-
+    /* Once user has chosen new selected event's location, edits the events and adds to storage. */
     const EditFinalButton = () => {
       return (
 
@@ -374,6 +428,7 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Deletes the selected event. Only shows if their is a event selected. */
     const DeleteButton = () => {
       return (
         <View>
@@ -390,6 +445,7 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Allows the user to opt out of editing an event. */
     const CloseEditButton = () => {
       return (
         <ModalButton
@@ -400,6 +456,7 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Allows the user to opt out of either adding or editing/deleting an event. */
     const CloseMainModalButton = () => (
       <ModalButton
         title="Close"
@@ -409,6 +466,7 @@ export default class CalendarComponent extends React.Component {
     );
 
 
+    /* Opens the add event menu if the user chooses to add an event. */
     const OpenAddButton = () => {
       return (
         <ModalButton
@@ -419,13 +477,13 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Opens the edit/delete event meny if the user chooses to edit or delete and event. Only displays
+    if the selected day has any events. */
     const OpenEditButton = () => {
       return (
         <View>
-
           {this.state.events.get(this.state.selectedDay) != undefined && this.state.events.get(this.state.selectedDay).length != 0 ? (
             <ModalButton
-
               title="Edit/Delete Event"
               onPress={() => this.setState({ isOpen: false, isEditOpen: true })}
               style={[calendarStyles.modalButton]}
@@ -436,14 +494,17 @@ export default class CalendarComponent extends React.Component {
       )
     }
 
+    /* Shows loading graphic when page is loading. */
     if (this.state.loading) {
       return (<Loader></Loader>)
     }
 
+    /* Returns map view when isMap is true */
     if (this.state.isMap) {
       return (
         <View style={calendarStyles.mapBackground}>
           <View style={calendarStyles.mapView}>
+            {/* A map that can be interaction with using the mapbox API.  */}
             <InteractiveMap
               {...this.state.viewport}
               onViewportChange={(viewport) => this.setState({ viewport })}
@@ -459,10 +520,12 @@ export default class CalendarComponent extends React.Component {
                 })
               }}>
 
+              {/* Allows control of the zoom for easy navigation.  */}
               <div style={{ position: 'absolute', top: 10, left: 10, opacity: 0.2 }}>
                 <NavigationControl showCompass={true} showZoom={true} />
               </div>
 
+              {/* Adds markers on the map for each of the users events. */}
               {this.state.latitude != '' && this.state.longitude != '' ? (
 
                 <Marker latitude={this.state.latitude} longitude={this.state.longitude} offsetLeft={-20} offsetTop={-15}>
@@ -504,10 +567,8 @@ export default class CalendarComponent extends React.Component {
                 <Text> Next </Text>
               );
           }}
-          markedDates={this.state._markedDates
-          }
+          markedDates={this.state._markedDates}
           calendarWidth={920}
-
           markingType={'multi-dot'}
           onDayPress={this.onDaySelect}
           theme={{
@@ -520,6 +581,7 @@ export default class CalendarComponent extends React.Component {
           }
         />
 
+        {/* The main modal, giving the user the option to add, delete or update events.  */}
         <Modal
           style={calendarStyles.modal}
           visible={this.state.isOpen}
@@ -534,7 +596,7 @@ export default class CalendarComponent extends React.Component {
 
         </Modal>
 
-
+        {/* The add event modal. Also functions as the edit event modal when isEditing is true.  */}
         <Modal
           style={calendarStyles.modal}
 
@@ -551,7 +613,7 @@ export default class CalendarComponent extends React.Component {
           }
 
           <ModalTextInput placeholder="Event Name" value={this.state.eventName} onChangeText={(text) => this.setState({ eventName: text })} />
-          <ModalTextInput placeholder="Location" value={this.state.location} onChangeText={(text) => this.setState({ location: text })} />
+          <ModalTextInput placeholder="Location (optional)" value={this.state.location} onChangeText={(text) => this.setState({ location: text })} />
 
           {this.state.isEditing ? (
             <Text style={calendarStyles.editText}>  {"The event time is currently: " + this.state.selectedEvent.getStartHour() + ":" + this.state.selectedEvent.getStartMinutes() + " - " + this.state.selectedEvent.getEndHour() + ":" + this.state.selectedEvent.getEndMinutes()}</Text>
@@ -561,6 +623,7 @@ export default class CalendarComponent extends React.Component {
             <> </>
           }
 
+          {/* Creates hour and minute pickers for the time. */}
           <Text style={calendarStyles.timeText}> Start Time </Text>
           <View style={calendarStyles.timePicker}>
             <TimePicker
@@ -605,6 +668,8 @@ export default class CalendarComponent extends React.Component {
             <Text style={calendarStyles.titleText}> Edit Event </Text>
             <Text style={calendarStyles.editText}> Select an event from below to edit! </Text>
             <ScrollView style={calendarStyles.modalListView}>
+
+              {/* Displays all events in a list, so events can be clicked on to be selected for editing/ deleting.  */}
               <FlatList
                 data={this.state.events.get(this.state.selectedDay)}
                 renderItem={({ item }) =>

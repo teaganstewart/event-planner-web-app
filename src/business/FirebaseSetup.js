@@ -1,7 +1,7 @@
+/* Imports for firebase access/ setup */
 import * as firebase from 'firebase'
-import { getUserDetails, registerUser, setUserDetails } from '../data/FirebaseAccess';
+import { registerUser, setUserDetails } from '../data/FirebaseAccess';
 
-// Your web app's Firebase configuration
 var firebaseConfig = {
     apiKey: "AIzaSyDfHY-qJMaonUdnxws4q7K-o1o-UsEa-1Y",
     authDomain: "swen325-a2.firebaseapp.com",
@@ -17,6 +17,10 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
+/* checks that the given username and password exists in the firebase database 
+    usernmae: the given username
+    password: the given password
+*/
 export async function login(username, password) {
     let email = username + "@planto.com"
 
@@ -25,7 +29,8 @@ export async function login(username, password) {
         return undefined;
     }
 
-    await firebase
+    // Checks firebase and returns the data to the main screen. 
+    let res = await firebase
         .auth()
         .signInWithEmailAndPassword(email, password)
         .then((response) => {
@@ -51,6 +56,7 @@ export async function login(username, password) {
         })
 }
 
+/* A funciton to create a new user and add them to the database. */
 export function register(name, username, password, comfirmPassword) {
 
     let email = username + "@planto.com"
@@ -65,6 +71,7 @@ export function register(name, username, password, comfirmPassword) {
         return undefined;
     }
 
+    // Registers the user through firebase, if it is sucessful, stores the users data.
     let res = registerUser(name, email, password)
     setUserDetails(res, email, name).catch((error) => {
         alert(error)
@@ -74,6 +81,7 @@ export function register(name, username, password, comfirmPassword) {
 
 }
 
+// Returns the current user.
 export function subscribeToAuthChanges(authStateChanged) {
     firebase.auth().onAuthStateChanged((user) => {
         authStateChanged(user);

@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 
+// Provides a simple loading animation for the other screen.s
 const Loader = props => {
     const {
         loading,

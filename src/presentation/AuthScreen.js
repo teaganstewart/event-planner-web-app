@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import { View, Text } from 'react-native'
+import { Mode } from 'react-native-popover-view/dist/Constants';
 import { login, register, subscribeToAuthChanges } from '../business/FirebaseSetup'
 import Loader from '../business/Loader';
 
 import { CustomTextInput, AppButton } from '../business/MainComponents'
 import { loginStyles, generalStyles } from './style'
 
+// Creates the login and register pages for my application and holds helper functions for logging in with firebase
 class AuthScreen extends Component {
 
     intialState = {
@@ -22,12 +24,14 @@ class AuthScreen extends Component {
         comfirmPassword: '',
     }
 
+    /* Handles when a user wants to login in, logs them in using firebase. */
     loginPress = () => {
 
         const { username, password } = this.state;
         let res = login(username, password)
     }
 
+    /* Handles when a user wants to register, registers them using firebase. */
     registerPress = () => {
         const { name, username, password, comfirmPassword } = this.state;
 
@@ -35,11 +39,13 @@ class AuthScreen extends Component {
 
     }
 
+    /* Methods that update the page when imformation from firestore is updated, or they are called */
     componentDidMount() {
         this.setState({ loading: true })
         subscribeToAuthChanges(this.onAuthStateChanged)
     }
 
+    // Moves the user to home page when the login is successful.
     onAuthStateChanged = (user) => {
         if (user !== null) {
             this.setState({ loading: false })
@@ -52,6 +58,7 @@ class AuthScreen extends Component {
 
     }
 
+    // Allows the screen to change between register and login mode.
     switchAuthMode = () => {
         this.setState(prevState => ({
             authMode: prevState.authMode === 'login' ? 'register' : 'login'
@@ -59,12 +66,15 @@ class AuthScreen extends Component {
     }
 
     render() {
+        /* Shows loading graphic when page is loading. */
         if (this.state.loading) {
             return (
                 <Loader></Loader>
             )
         }
         return (
+
+            // Only renders comfirm password and name if the user is in register mode. 
             <View style={loginStyles.container}>
 
                 <Text style={generalStyles.title}>PlanTo: {this.state.authMode}</Text>

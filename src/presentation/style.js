@@ -1,6 +1,6 @@
 
 import { StyleSheet } from 'react-native';
- 
+
 // Sets the general deafult style that crosses all pages.
 export const generalStyles = StyleSheet.create({
     title: {
@@ -22,7 +22,7 @@ export const mainStyles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 26,
         paddingBottom: 10,
-        
+
     },
     separator: {
         marginVertical: 10,
@@ -33,7 +33,7 @@ export const mainStyles = StyleSheet.create({
         width: "100%",
         paddingHorizontal: "4%",
         paddingBottom: 20,
-        borderBottomWidth:2,
+        borderBottomWidth: 2,
         borderBottomColor: 'black'
     },
     title: {
@@ -67,9 +67,9 @@ export const loginStyles = StyleSheet.create({
         width: 300,
         textAlign: "center",
         fontFamily: 'bebas-neue'
-    }, 
+    },
     textInput: {
-        borderColor: '#000000', 
+        borderColor: '#000000',
         borderBottomWidth: 2,
         width: 300,
         height: 40,
@@ -146,6 +146,7 @@ export const homeStyles = StyleSheet.create({
     }
 });
 
+// Sets the deafult styles for the map page.
 export const mapStyles = StyleSheet.create({
     container: {
         flex: 1,
@@ -173,10 +174,10 @@ export const calendarStyles = StyleSheet.create({
         paddingHorizontal: "2%",
         paddingVertical: 30,
         width: '100%',
-        
+
     },
     modalButton: {
-        color:'#black',
+        color: '#black',
         width: "90%"
     },
     modal: {
@@ -184,7 +185,7 @@ export const calendarStyles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 26,
         paddingBottom: 10,
-        
+
     },
     button: {
         fontSize: 20,
@@ -198,9 +199,9 @@ export const calendarStyles = StyleSheet.create({
         textAlign: "center",
         fontFamily: 'bebas-neue',
         marginLeft: '10%'
-    }, 
+    },
     textInput: {
-        borderColor: '#000000', 
+        borderColor: '#000000',
         borderBottomWidth: 2,
         width: '80%',
         marginLeft: '10%',

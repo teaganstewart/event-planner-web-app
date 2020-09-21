@@ -20,7 +20,6 @@ export default function useCachedResources() {
           'source-sans': require('../assets/fonts/SourceSansPro-Light.ttf'),
         });
       } catch (e) {
-        // We might want to provide this error information to an error reporting service
         console.warn(e);
       } finally {
         setLoadingComplete(true);

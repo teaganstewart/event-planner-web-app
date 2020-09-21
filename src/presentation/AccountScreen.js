@@ -1,14 +1,18 @@
+/* Imports react-native components*/
 import React, { Component } from 'react';
+import { View, Text, TouchableOpacity, TouchableHighlight } from 'react-native'
 
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, TouchableHighlight} from 'react-native'
+
+import Loader from '../business/Loader';
 
 import { subscribeToAuthChanges, logoutUser } from '../business/FirebaseSetup'
 import * as firebase from 'firebase'
 
-import { accountStyles, mainStyles, generalStyles } from './style'
-import Loader from '../business/Loader';
+import { accountStyles, mainStyles } from './style'
 
+/*The Account page which stores user information, and allows users to logout. Was originally going
+to also store the users friends list*/
 class AccountScreen extends Component {
 
     state = {
@@ -16,11 +20,14 @@ class AccountScreen extends Component {
         name: ''
     }
 
+    /* Methods that update the page when imformation from firestore is updated, or they are called */
     componentDidMount() {
         subscribeToAuthChanges(this.onAuthStateChanged)
 
     }
 
+    /* Makes sure that the user is logged out when they click log out, and also gets the users 
+    information, including name. */
     onAuthStateChanged = (user) => {
         if (user === null) {
             this.props.navigation.navigate('Auth');
@@ -38,13 +45,14 @@ class AccountScreen extends Component {
         }
     }
 
+    // Function that logs out the user using Firebase.
     logoutPress = () => {
         this.setState({ user: null })
         let res = logoutUser();
-
     }
 
     render() {
+        /* Shows loading graphic when page is loading. */
         if (this.state.user === null) {
             return (
                 <Loader />
@@ -53,7 +61,7 @@ class AccountScreen extends Component {
         return (
             <View style={mainStyles.container}>
                 <View style={mainStyles.header}>
-                    <TouchableHighlight  style={mainStyles.backButton} onPress={() => { this.props.navigation.navigate("Home", { token: 'refresh' })}}>
+                    <TouchableHighlight style={mainStyles.backButton} onPress={() => { this.props.navigation.navigate("Home", { token: 'refresh' }) }}>
                         <View>
                             <Ionicons name={"ios-arrow-back"} size={25} color={"#black"} />
                         </View>
@@ -66,6 +74,7 @@ class AccountScreen extends Component {
                 </View>
 
                 <View style={mainStyles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+                {/* Unique for each user, displays their name */}
                 <Text> Welcome {this.state.name}!</Text>
             </View>
         )

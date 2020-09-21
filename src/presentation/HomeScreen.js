@@ -1,16 +1,19 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native'
 
-import { subscribeToAuthChanges } from '../business/FirebaseSetup'
-import * as firebase from 'firebase'
-
-import Loader from '../business/Loader';
-import { EventObject } from '../data/EventObject'
-import { homeStyles, mainStyles, generalStyles } from './style'
-
 import { Card } from 'react-native-paper'
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 
+import Loader from '../business/Loader';
+import { EventObject } from '../data/EventObject'
+
+import { subscribeToAuthChanges } from '../business/FirebaseSetup'
+import * as firebase from 'firebase'
+
+import { homeStyles, mainStyles, generalStyles } from './style'
+
+/* The Home page of my app. This screen displays upcoming events, and provides 
+naviagation to other pages.*/
 class HomeScreen extends Component {
 
     state = {
@@ -19,10 +22,12 @@ class HomeScreen extends Component {
         pastEvents: []
     }
 
+    /* Methods that update the page when imformation from firestore is updated, or they are called */
     componentDidMount() {
         subscribeToAuthChanges(this.onAuthStateChanged)
     }
 
+    // When the page is loaded, loads all the events from firebase and stores them in a map.
     onAuthStateChanged = (user) => {
         if (user === null) {
             this.props.navigation.navigate('Auth');
@@ -48,6 +53,7 @@ class HomeScreen extends Component {
                         doc.get("longitude")
                     );
 
+                    // Checks if the event is upcoming or has past.
                     if (doc.get("date") >= new Date().toISOString().split("T")[0]) {
                         uEvents.push(e);
                     }
@@ -57,6 +63,7 @@ class HomeScreen extends Component {
 
                 })
 
+                // Sorts the upcoming events by date.
                 uEvents.sort(function (a, b) {
 
                     if (a.getDate() < b.getDate()) {
@@ -67,6 +74,7 @@ class HomeScreen extends Component {
                     }
                 });
 
+                // Sorts the past events by most recent.
                 pEvents.sort(function (a, b) {
 
                     if (a.getDate() < b.getDate()) {
@@ -82,6 +90,7 @@ class HomeScreen extends Component {
         }
     }
 
+    // Allows the page to recieve props from other pages then refreshes the page.
     componentWillReceiveProps(nextProps) {
         if (nextProps.navigation.state.params.token) {
             this.setState({ loading: true })
@@ -90,8 +99,8 @@ class HomeScreen extends Component {
     }
 
     render() {
-        const { params } = this.props.navigation.state;
 
+        /* Shows loading graphic when page is loading. */
         if (this.state.loading) {
             return (
                 <Loader />
@@ -113,7 +122,7 @@ class HomeScreen extends Component {
 
                         ) : <>
                             </>}
-
+                        {/* Renders all the upcoming events in a scrollable list. */}
                         <FlatList
                             data={this.state.events}
                             renderItem={({ item }) =>
@@ -146,6 +155,7 @@ class HomeScreen extends Component {
                         ) : <>
                             </>}
 
+                        {/* Renders the past events in a scrollable list. */}
                         <FlatList
                             data={this.state.pastEvents}
                             renderItem={({ item }) =>
@@ -155,7 +165,7 @@ class HomeScreen extends Component {
                                         <View>
                                             <Text style={homeStyles.cardDate}> {item.getDate()} </Text>
                                             <Text> {"Name: " + item.getName()}</Text>
-                                            <Text> {"Location: " + item.getLocation() + " (" + (item.getLatitude()).toFixed(4) + ", " + item.getLongitude().toFixed(4)+")"} </Text>
+                                            <Text> {"Location: " + item.getLocation() + " (" + (item.getLatitude()).toFixed(4) + ", " + item.getLongitude().toFixed(4) + ")"} </Text>
                                             <Text style={homeStyles.cardDate}> {item.getStartHour() + ":" + item.getStartMinutes() + " - " + item.getEndHour() + ":" + item.getEndMinutes()}</Text>
                                         </View>
                                     </Card>
