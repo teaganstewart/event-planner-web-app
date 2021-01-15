@@ -23,4 +23,19 @@ $ npm install @react-native-mapbox-gl/maps
 $ npm install react-map-gl <br/>
 $ npm install react-native-popover <br/>
 <br/>
-The app should be running.
+The app should be running. <br>
+
+<b>The calendar page, with events under each day, dots represent events.</b> 
+![Alt text](/photos/calendar.jpg?raw=true "Calendar Page") <br>
+
+<b>The screen that is shown when you click on a calendar date.</b> 
+![Alt text](/photos/edit.jpg?raw=true "Date Option Page") <br>
+
+<b>Visual Display of when you are editing an event.</b> 
+![Alt text](/photos/editdetails.jpg?raw=true "Edit Event Details Page") <br>
+
+<b>The home page of the application, displays past and upcoming events.</b> 
+![Alt text](/photos/home.jpg?raw=true "Home Page") <br>
+
+<b>The map page, each event is displayed and when clicked on shows more information.</b> 
+![Alt text](/photos/map.jpg?raw=true "Map page") <br>
