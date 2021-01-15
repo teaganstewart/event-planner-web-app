@@ -47,7 +47,7 @@ class AuthScreen extends Component {
 
     // Moves the user to home page when the login is successful.
     onAuthStateChanged = (user) => {
-        if (user !== null) {
+        if (user != undefined) {
             this.setState({ loading: false })
             this.props.navigation.navigate('App');
         }

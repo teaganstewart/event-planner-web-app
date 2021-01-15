@@ -30,6 +30,7 @@ class HomeScreen extends Component {
     // When the page is loaded, loads all the events from firebase and stores them in a map.
     onAuthStateChanged = (user) => {
         if (user === null) {
+            user === undefined;
             this.props.navigation.navigate('Auth');
         }
         else {
@@ -130,6 +131,7 @@ class HomeScreen extends Component {
 
                                     <Card style={homeStyles.listCard}>
                                         <View>
+                                            <Text style={homeStyles.cardDate}> {item.getDate()} </Text>
                                             <Text> {"Name: " + item.getName()}</Text>
                                             <Text> {"Location: " + item.getLocation()} </Text>
                                             <Text style={homeStyles.cardDate}> {item.getStartHour() + ":" + item.getStartMinutes() + " - " + item.getEndHour() + ":" + item.getEndMinutes()}</Text>
